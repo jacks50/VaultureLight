@@ -7,7 +7,10 @@ interface DialogProps {
   actions: React.ReactNode;
 }
 
-/** Modal dialog on top of the native <dialog> element (focus trap, Escape to close). */
+/**
+ * Modal dialog on top of the native <dialog> element (focus trap, Escape to close).
+ * Clicking the backdrop does not close it, so a stray tap cannot discard a half-typed entry.
+ */
 export function Dialog({ title, onClose, children, actions }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
 
@@ -24,9 +27,6 @@ export function Dialog({ title, onClose, children, actions }: DialogProps) {
       onCancel={(e) => {
         e.preventDefault();
         onClose();
-      }}
-      onClick={(e) => {
-        if (e.target === ref.current) onClose();
       }}
     >
       <h2 className="dialog-title">{title}</h2>

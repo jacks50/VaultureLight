@@ -70,6 +70,8 @@ export default function App() {
   const [fpError, setFpError] = useState<string | null>(null);
   // Raw vault key between "password checked" and "fingerprint given"; wiped right after
   const pendingRawKey = useRef<Uint8Array<ArrayBuffer> | null>(null);
+  // Synchronous guard: `saving` state is only visible after a re-render, too late for a double tap
+  const saveInFlight = useRef(false);
   const [fpVerified, setFpVerified] = useState(false);
 
   const dirty = !!vault && vault.rev !== vault.savedRev;
@@ -180,8 +182,9 @@ export default function App() {
     discardPendingKey();
     setFpError(null);
     setFpBusy("Checking the master password…");
-    const raw = await deriveRawKey(password, vault.vaultKey.salt);
+    let raw: Uint8Array<ArrayBuffer> | null = null;
     try {
+      raw = await deriveRawKey(password, vault.vaultKey.salt);
       const candidate = await importVaultKey(raw, vault.vaultKey.salt);
       const probe = await encryptVault({ version: 2, entries: [] }, vault.vaultKey);
       await decryptWithKey(probe, candidate);
@@ -189,7 +192,7 @@ export default function App() {
       setFpVerified(true);
       return true;
     } catch {
-      raw.fill(0);
+      raw?.fill(0);
       setFpError("Wrong master password");
       return false;
     } finally {
@@ -277,7 +280,8 @@ export default function App() {
   };
 
   const handleSave = async (force = false) => {
-    if (!file || !vault || saving) return;
+    if (!file || !vault || saveInFlight.current) return;
+    saveInFlight.current = true;
     const token = ensureToken();
     setSaving(true);
     try {
@@ -295,6 +299,7 @@ export default function App() {
     } catch (err) {
       toast(`Not saved: ${errorMessage(err)}`, "error");
     } finally {
+      saveInFlight.current = false;
       setSaving(false);
     }
   };

@@ -14,7 +14,11 @@ const FOLDER_MIME = "application/vnd.google-apps.folder";
 const VAULT_MIME = "application/octet-stream";
 const JSON_MIME = "application/json";
 
-/** Drive `version` increases on every change; used to detect saves from another device. */
+/**
+ * `version` holds the content's md5Checksum: it changes only when the content does, unlike Drive's
+ * own `version` field, which also increases on server-side changes invisible to the user.
+ * Used to detect saves from another device.
+ */
 export interface DriveFile {
   id: string;
   version: string;
@@ -66,8 +70,8 @@ export async function getUserEmail(): Promise<string> {
 async function findFile(name: string): Promise<DriveFile | null> {
   const folder = await findFolder();
   if (!folder) return null;
-  const file = await findOne(`name = '${name}' and '${folder.id}' in parents`, "id,version");
-  return file ? { id: file.id, version: file.version } : null;
+  const file = await findOne(`name = '${name}' and '${folder.id}' in parents`, "id,md5Checksum");
+  return file ? { id: file.id, version: file.md5Checksum } : null;
 }
 
 async function createFile(name: string, content: string, mimeType: string): Promise<DriveFile> {
@@ -85,25 +89,25 @@ async function createFile(name: string, content: string, mimeType: string): Prom
   const body = new FormData();
   body.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
   body.append("file", new Blob([content], { type: mimeType }));
-  const file = await (await request(`${UPLOAD}/files?uploadType=multipart&fields=id,version`, { method: "POST", body })).json();
-  return { id: file.id, version: file.version };
+  const file = await (await request(`${UPLOAD}/files?uploadType=multipart&fields=id,md5Checksum`, { method: "POST", body })).json();
+  return { id: file.id, version: file.md5Checksum };
 }
 
-/** Replace a file's content; returns the new Drive version. */
+/** Replace a file's content; returns its new checksum. */
 async function updateFile(fileId: string, content: string, mimeType: string): Promise<string> {
-  const { version } = await (
-    await request(`${UPLOAD}/files/${fileId}?uploadType=media&fields=version`, {
+  const { md5Checksum } = await (
+    await request(`${UPLOAD}/files/${fileId}?uploadType=media&fields=md5Checksum`, {
       method: "PATCH",
       headers: { "Content-Type": mimeType },
       body: content,
     })
   ).json();
-  return version;
+  return md5Checksum;
 }
 
 export async function getVersion(fileId: string): Promise<string> {
-  const { version } = await (await request(`${API}/files/${fileId}?fields=version`)).json();
-  return version;
+  const { md5Checksum } = await (await request(`${API}/files/${fileId}?fields=md5Checksum`)).json();
+  return md5Checksum;
 }
 
 export async function downloadFile(fileId: string): Promise<string> {

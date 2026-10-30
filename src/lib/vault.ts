@@ -108,17 +108,18 @@ function parseVaultData(json: string): VaultData {
   return { version: 2, entries: data.entries.map(normalizeEntry) };
 }
 
-function normalizeEntry(e: Partial<Entry>): Entry {
+function normalizeEntry(e: Partial<Record<keyof Entry, unknown>>): Entry {
   const now = new Date().toISOString();
+  const text = (v: unknown) => (v === undefined || v === null ? "" : String(v));
   return {
-    id: e.id || crypto.randomUUID(),
-    name: e.name ?? "",
-    username: e.username ?? "",
-    url: e.url ?? "",
-    password: e.password ?? "",
-    notes: e.notes ?? "",
-    createdAt: e.createdAt || now,
-    updatedAt: e.updatedAt || e.createdAt || now,
+    id: text(e.id) || crypto.randomUUID(),
+    name: text(e.name),
+    username: text(e.username),
+    url: text(e.url),
+    password: text(e.password),
+    notes: text(e.notes),
+    createdAt: text(e.createdAt) || now,
+    updatedAt: text(e.updatedAt) || text(e.createdAt) || now,
   };
 }
 
