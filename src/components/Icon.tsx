@@ -6,6 +6,7 @@ import close from "@material-symbols/svg-400/rounded/close.svg?raw";
 import copy from "@material-symbols/svg-400/rounded/content_copy.svg?raw";
 import del from "@material-symbols/svg-400/rounded/delete.svg?raw";
 import emojiSymbols from "@material-symbols/svg-400/rounded/emoji_symbols.svg?raw";
+import fingerprint from "@material-symbols/svg-400/rounded/fingerprint.svg?raw";
 import key from "@material-symbols/svg-400/rounded/key.svg?raw";
 import logout from "@material-symbols/svg-400/rounded/logout.svg?raw";
 import numbers from "@material-symbols/svg-400/rounded/numbers.svg?raw";
@@ -18,7 +19,7 @@ import visibility from "@material-symbols/svg-400/rounded/visibility.svg?raw";
 import visibilityOff from "@material-symbols/svg-400/rounded/visibility_off.svg?raw";
 
 const ICONS = {
-  abc, add, autorenew, close, copy, delete: del, emojiSymbols, key, logout, numbers, person,
+  abc, add, autorenew, close, copy, delete: del, emojiSymbols, fingerprint, key, logout, numbers, person,
   public: publicIcon, save, search, uploadFile, visibility, visibilityOff,
 };
 

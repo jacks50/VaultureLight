@@ -8,10 +8,11 @@ interface ToolbarProps {
   onAdd: () => void;
   onGenerate: () => void;
   onSave: () => void;
+  onFingerprint: () => void;
   onSignOut: () => void;
 }
 
-export function Toolbar({ search, onSearch, dirty, saving, onAdd, onGenerate, onSave, onSignOut }: ToolbarProps) {
+export function Toolbar({ search, onSearch, dirty, saving, onAdd, onGenerate, onSave, onFingerprint, onSignOut }: ToolbarProps) {
   return (
     <header className="toolbar">
       <div className="toolbar-brand">
@@ -32,6 +33,7 @@ export function Toolbar({ search, onSearch, dirty, saving, onAdd, onGenerate, on
           disabled={saving}
           onClick={onSave}
         />
+        <IconButton icon="fingerprint" label="Fingerprint unlock" onClick={onFingerprint} />
         <IconButton icon="logout" label="Sign out" onClick={onSignOut} />
       </div>
     </header>

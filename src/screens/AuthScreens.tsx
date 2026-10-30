@@ -49,15 +49,26 @@ export function SignInScreen({ ready, busy, error, onSignIn }: CommonProps & { r
 
 interface UnlockScreenProps extends CommonProps {
   email: string;
+  /** Set when this device can unlock with a fingerprint. */
+  onFingerprint?: () => void;
   onUnlock: (password: string) => void;
   onSignOut: () => void;
 }
 
-export function UnlockScreen({ email, busy, error, onUnlock, onSignOut }: UnlockScreenProps) {
+export function UnlockScreen({ email, busy, error, onFingerprint, onUnlock, onSignOut }: UnlockScreenProps) {
   const [password, setPassword] = useState("");
   return (
     <AuthLayout>
       <p className="hint">Connected as {email}</p>
+      {onFingerprint && (
+        <>
+          <button type="button" className="button" onClick={onFingerprint} disabled={!!busy}>
+            <Icon name="fingerprint" />
+            Unlock with fingerprint
+          </button>
+          <p className="hint">or with your master password</p>
+        </>
+      )}
       <form
         className="auth-form"
         onSubmit={(e) => {
@@ -65,7 +76,7 @@ export function UnlockScreen({ email, busy, error, onUnlock, onSignOut }: Unlock
           if (password && !busy) onUnlock(password);
         }}
       >
-        <PasswordInput placeholder="Master password" value={password} onChange={(e) => setPassword(e.target.value)} autoFocus />
+        <PasswordInput placeholder="Master password" value={password} onChange={(e) => setPassword(e.target.value)} autoFocus={!onFingerprint} />
         <button type="submit" className="button" disabled={!password || !!busy}>
           Unlock
         </button>

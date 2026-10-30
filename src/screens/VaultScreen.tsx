@@ -14,6 +14,7 @@ interface VaultScreenProps {
   saving: boolean;
   onChange: (entries: Entry[]) => void;
   onSave: () => void;
+  onFingerprint: () => void;
   onSignOut: () => void;
 }
 
@@ -21,7 +22,7 @@ const byName = (a: Entry, b: Entry) =>
   a.name.localeCompare(b.name, undefined, { sensitivity: "base" }) ||
   a.username.localeCompare(b.username, undefined, { sensitivity: "base" });
 
-export function VaultScreen({ entries, dirty, saving, onChange, onSave, onSignOut }: VaultScreenProps) {
+export function VaultScreen({ entries, dirty, saving, onChange, onSave, onFingerprint, onSignOut }: VaultScreenProps) {
   const toast = useToast();
   const [search, setSearch] = useState("");
   // undefined: closed, null: new entry
@@ -66,6 +67,7 @@ export function VaultScreen({ entries, dirty, saving, onChange, onSave, onSignOu
         onAdd={() => setEditing(null)}
         onGenerate={() => setGenerating(true)}
         onSave={onSave}
+        onFingerprint={onFingerprint}
         onSignOut={onSignOut}
       />
       {dirty && (

@@ -40,7 +40,7 @@ export class WrongPasswordError extends Error {
   }
 }
 
-function toBase64(bytes: Uint8Array): string {
+export function toBase64(bytes: Uint8Array): string {
   let binary = "";
   for (let i = 0; i < bytes.length; i += 0x8000) {
     binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
@@ -48,7 +48,7 @@ function toBase64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 
-function fromBase64(text: string): Uint8Array<ArrayBuffer> {
+export function fromBase64(text: string): Uint8Array<ArrayBuffer> {
   const binary = atob(text);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
@@ -69,16 +69,33 @@ export function newSalt(): string {
   return randomChars(ALPHANUMERIC, 16);
 }
 
-export async function deriveKey(password: string, salt: string): Promise<VaultKey> {
-  const base = await crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, ["deriveKey"]);
-  const key = await crypto.subtle.deriveKey(
+/**
+ * Raw 256-bit vault key bytes. Only needed to enrol fingerprint unlock (to wrap them);
+ * callers must not keep them around.
+ */
+export async function deriveRawKey(password: string, salt: string): Promise<Uint8Array<ArrayBuffer>> {
+  const base = await crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits(
     { name: "PBKDF2", hash: "SHA-256", salt: encoder.encode(salt), iterations: ITERATIONS },
     base,
-    { name: "AES-GCM", length: 256 },
-    false,
-    ["encrypt", "decrypt"],
+    256,
   );
+  return new Uint8Array(bits);
+}
+
+/** Turn raw key bytes into a non-extractable AES-GCM key. */
+export async function importVaultKey(raw: Uint8Array<ArrayBuffer>, salt: string): Promise<VaultKey> {
+  const key = await crypto.subtle.importKey("raw", raw, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
   return { salt, key };
+}
+
+export async function deriveKey(password: string, salt: string): Promise<VaultKey> {
+  const raw = await deriveRawKey(password, salt);
+  try {
+    return await importVaultKey(raw, salt);
+  } finally {
+    raw.fill(0);
+  }
 }
 
 export function vaultSalt(content: string): string {

@@ -1,5 +1,5 @@
 /**
- * Google Drive v3 access for /Vaulture/passwords.vault.
+ * Google Drive v3 access for /Vaulture/passwords.vault and /Vaulture/devices.json.
  * With the drive.file scope the app only sees files it created itself, so the folder and
  * the vault are always created by the app (first-run import).
  */
@@ -8,9 +8,11 @@ import { AuthError, currentToken, forgetToken } from "./google";
 const API = "https://www.googleapis.com/drive/v3";
 const UPLOAD = "https://www.googleapis.com/upload/drive/v3";
 const FOLDER_NAME = "Vaulture";
-const FILE_NAME = "passwords.vault";
+const VAULT_NAME = "passwords.vault";
+const DEVICES_NAME = "devices.json";
 const FOLDER_MIME = "application/vnd.google-apps.folder";
 const VAULT_MIME = "application/octet-stream";
+const JSON_MIME = "application/json";
 
 /** Drive `version` increases on every change; used to detect saves from another device. */
 export interface DriveFile {
@@ -61,23 +63,14 @@ export async function getUserEmail(): Promise<string> {
   return user?.emailAddress ?? "";
 }
 
-export async function findVault(): Promise<DriveFile | null> {
+async function findFile(name: string): Promise<DriveFile | null> {
   const folder = await findFolder();
   if (!folder) return null;
-  const file = await findOne(`name = '${FILE_NAME}' and '${folder.id}' in parents`, "id,version");
+  const file = await findOne(`name = '${name}' and '${folder.id}' in parents`, "id,version");
   return file ? { id: file.id, version: file.version } : null;
 }
 
-export async function getVersion(fileId: string): Promise<string> {
-  const { version } = await (await request(`${API}/files/${fileId}?fields=version`)).json();
-  return version;
-}
-
-export async function downloadVault(fileId: string): Promise<string> {
-  return (await request(`${API}/files/${fileId}?alt=media`, { cache: "no-store" })).text();
-}
-
-export async function createVault(content: string): Promise<DriveFile> {
+async function createFile(name: string, content: string, mimeType: string): Promise<DriveFile> {
   let folder = await findFolder();
   if (!folder) {
     folder = await (
@@ -88,22 +81,41 @@ export async function createVault(content: string): Promise<DriveFile> {
       })
     ).json();
   }
-  const metadata = { name: FILE_NAME, parents: [folder!.id], mimeType: VAULT_MIME };
+  const metadata = { name, parents: [folder!.id], mimeType };
   const body = new FormData();
   body.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
-  body.append("file", new Blob([content], { type: VAULT_MIME }));
+  body.append("file", new Blob([content], { type: mimeType }));
   const file = await (await request(`${UPLOAD}/files?uploadType=multipart&fields=id,version`, { method: "POST", body })).json();
   return { id: file.id, version: file.version };
 }
 
-/** Replace the vault content; returns the new Drive version. */
-export async function updateVault(fileId: string, content: string): Promise<string> {
+/** Replace a file's content; returns the new Drive version. */
+async function updateFile(fileId: string, content: string, mimeType: string): Promise<string> {
   const { version } = await (
     await request(`${UPLOAD}/files/${fileId}?uploadType=media&fields=version`, {
       method: "PATCH",
-      headers: { "Content-Type": VAULT_MIME },
+      headers: { "Content-Type": mimeType },
       body: content,
     })
   ).json();
   return version;
 }
+
+export async function getVersion(fileId: string): Promise<string> {
+  const { version } = await (await request(`${API}/files/${fileId}?fields=version`)).json();
+  return version;
+}
+
+export async function downloadFile(fileId: string): Promise<string> {
+  return (await request(`${API}/files/${fileId}?alt=media`, { cache: "no-store" })).text();
+}
+
+export const findVault = () => findFile(VAULT_NAME);
+export const downloadVault = downloadFile;
+export const createVault = (content: string) => createFile(VAULT_NAME, content, VAULT_MIME);
+export const updateVault = (fileId: string, content: string) => updateFile(fileId, content, VAULT_MIME);
+
+// Fingerprint unlock registry (see lib/passkey.ts), stored next to the vault
+export const findDevices = () => findFile(DEVICES_NAME);
+export const createDevices = (content: string) => createFile(DEVICES_NAME, content, JSON_MIME);
+export const updateDevices = (fileId: string, content: string) => updateFile(fileId, content, JSON_MIME);

@@ -50,6 +50,14 @@ All tool commands prompt for the password. Their only dependency is `cryptograph
 - **`src/lib/google.ts`:** Google Identity Services token model, `drive.file` scope only. `requestToken()`/`ensureToken()` must be called synchronously inside click handlers, before any `await`, or the popup gets blocked.
 - **`src/lib/drive.ts`:** Drive v3 REST via `fetch`. With `drive.file`, the app only sees files it created, so `/Vaulture` and the vault are created by the app's import flow. Drive's `version` field is recorded at load and compared before each save to detect saves from another device.
 - **`src/App.tsx`:** the screen state machine (`signin`, then `import` or `unlock`, then `vault`) plus save, reload, conflict and lock logic. Unsaved state is tracked as `rev !== savedRev`.
+- **`src/lib/passkey.ts` (fingerprint unlock):**
+  - Each device's passkey PRF output goes through HKDF to an AES-GCM key. That key wraps the raw vault key, bound by additional data to the credential ID and the vault salt.
+  - Entries live in `/Vaulture/devices.json` in Drive.
+  - The raw key exists only briefly: `deriveRawKey`/`importVaultKey` in `vault.ts`, and it's zeroed afterwards. The in-memory vault key stays non-extractable.
+  - Enrolment is two clicks (password check, then fingerprint), so the WebAuthn prompt runs inside a user gesture.
+  - The RP ID is `jacks50.github.io`, which is shared with all the user's GitHub Pages sites (same origin).
+  - `tests/passkey.test.ts` uses a fake authenticator.
+- **Google grant:** sign-out only forgets the token and doesn't revoke the grant. Revoking forced the consent screen every time.
 - **Security hardening:**
   - The CSP is injected only into the production build, by the plugin in `vite.config.ts`. The dev server needs inline scripts.
   - Trusted Types are enforced. The only script URL allowed is Google's sign-in script, through the policy in `google.ts`.

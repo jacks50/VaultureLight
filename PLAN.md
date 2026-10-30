@@ -45,8 +45,10 @@ A PWA password manager for phone and PC. The encrypted vault lives in Google Dri
 - [x] Live at https://jacks50.github.io/VaultureLight/ (repo `jacks50/VaultureLight`; every push to `main` redeploys)
 - [ ] Tested on phone and PC: install, sign in, unlock, save, sync between devices
 
-## Phase 4: Fingerprint unlock
+## Phase 4: Fingerprint unlock (built, to be tested on real devices)
 
-- [ ] Enrol a passkey with PRF, and store the wrapped vault key in `/Vaulture/devices.json`
-- [ ] Unlock with the passkey, falling back to the master password
-- [ ] "Forget this device"
+- [x] Enrol a passkey with PRF, and store the wrapped vault key in `/Vaulture/devices.json` (master password confirmed first)
+- [x] Unlock with the passkey, falling back to the master password
+- [x] Remove a device (the passkey itself must also be deleted in the OS or Google Password Manager settings)
+- [x] Sign out no longer revokes the Google grant (that forced the consent screen and test-app warning on every sign-in)
+- [ ] Tested on Android and PC

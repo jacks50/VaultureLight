@@ -106,7 +106,10 @@ export function forgetToken(): void {
   expiresAt = 0;
 }
 
+/**
+ * Forget the token without revoking the app's Drive grant: revoking would make Google show the
+ * full consent screen (and the "unverified app" warning) on every sign-in.
+ */
 export function signOut(): void {
-  if (accessToken) google.accounts.oauth2.revoke(accessToken, () => undefined);
   forgetToken();
 }
