@@ -1,0 +1,7 @@
+node_modules/
+dist/
+*.local
+# never commit real vaults or plaintext exports
+*.vault
+!tests/fixtures/*.vault
+gathered.*

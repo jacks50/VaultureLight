@@ -1,0 +1,4 @@
+[
+  {"passwordName": "Example", "passwordUsername": "alice@example.com", "passwordURL": "https://example.com", "passwordValue": "s3cr3t-Ünïcødé-🔑", "notes": "", "updateDate": "2024-05-01T10:00:00"},
+  {"passwordName": "Other", "passwordUsername": "bob", "passwordURL": "", "passwordValue": "hunter2", "notes": "a note", "updateDate": "2023-01-01T00:00:00"}
+]
