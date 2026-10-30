@@ -38,10 +38,12 @@ A PWA password manager for phone and PC. The encrypted vault lives in Google Dri
 - [x] Exact pinned dependency versions
 - [ ] Sign-in tested on the production build (`npm run build && npx vite preview --port 5173`)
 
-## Phase 3: Install and deploy
+## Phase 3: Install and deploy (done)
 
-- [ ] Web app manifest and icons (no service worker data caching)
-- [ ] GitHub Actions deploy to GitHub Pages
+- [x] Web app manifest and icons (no service worker)
+- [x] GitHub Actions deploy to GitHub Pages: actions pinned to SHAs, `npm ci --ignore-scripts`, tests before build
+- [x] Live at https://jacks50.github.io/VaultureLight/ (repo `jacks50/VaultureLight`; every push to `main` redeploys)
+- [ ] Tested on phone and PC: install, sign in, unlock, save, sync between devices
 
 ## Phase 4: Fingerprint unlock
 
